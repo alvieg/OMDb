@@ -1,17 +1,43 @@
 <script>
 	import DetailPage from '$lib/components/DetailPage.svelte';
-	import { get } from 'svelte/store';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 
-	let data = {};
-	let id = get(page).params.id;
-	async function getDetails() {
-		const res = await fetch(`/api/details?id=${id}`);
-		data = await res.json();
+	let data = null;
+	let error = null;
+	let loading = true;
+
+	// reactive param
+	$: id = $page.params.id;
+
+	async function loadDetails() {
+		loading = true;
+		try {
+			const res = await fetch(`/api/details?id=${id}&type=tv`);
+			if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+			data = await res.json();
+		} catch (e) {
+			error = e.message;
+		} finally {
+			loading = false;
+		}
 	}
 
-    onMount(getDetails)
+	onMount(loadDetails);
 </script>
 
-<DetailPage {data} />
+{#if loading}
+	<p>Loading...</p>
+{:else if error}
+	<p class="error">{error}</p>
+{:else}
+	<DetailPage {data} />
+{/if}
+
+<style>
+	.error {
+		color: red;
+		font-weight: bold;
+		margin: 1rem;
+	}
+</style>

@@ -2,23 +2,44 @@
 	import { goto } from '$app/navigation';
 
 	export let data = {};
+
 	function onclick() {
-		// OMDb's Type is already lowercase (e.g., "movie", "series", "episode")
-		const type = data.Type?.toLowerCase();
-		if (type && data.imdbID) {
-			goto(`/${type}/${data.imdbID}`);
+		// TMDb uses "media_type" for search results
+		const type = data.media_type || (data.title ? 'movie' : data.name ? 'tv' : null);
+		if (type && data.id) {
+			goto(`/${type}/${data.id}`);
 		}
 	}
+
+	// Poster URL handling
+	$: poster = data.poster_path
+		? `https://image.tmdb.org/t/p/w500${data.poster_path}`
+		: 'https://via.placeholder.com/300x450?text=No+Image';
+
+	// Title handling (movies have `title`, TV shows have `name`)
+	$: title = data.title || data.name || 'Untitled';
+
+	// Year handling
+	$: year =
+		data.release_date?.split('-')[0] || data.first_air_date?.split('-')[0] || 'Unknown Year';
+
+	// Media type display
+	$: typeLabel =
+		data.media_type === 'tv' || data.name
+			? 'TV Show'
+			: data.media_type === 'movie' || data.title
+				? 'Movie'
+				: data.media_type === 'person'
+					? 'Person'
+					: 'Unknown';
 </script>
 
 <div class="card" on:click={onclick}>
-	<img src={data.Poster} alt={data.Title} />
+	<img src={poster} alt={title} />
 	<div class="info">
-		<h4>{data.Title}</h4>
-		<p class="year">{data.Year}</p>
-		<p class="type">
-			{data.Type === 'series' ? 'TV Show' : data.Type === 'movie' ? 'Movie' : 'Episode'}
-		</p>
+		<h4>{title}</h4>
+		<p class="year">{year}</p>
+		<p class="type">{typeLabel}</p>
 	</div>
 </div>
 
@@ -45,6 +66,7 @@
 		width: 100%;
 		height: 300px;
 		object-fit: cover;
+		background: #eee;
 	}
 
 	.info {

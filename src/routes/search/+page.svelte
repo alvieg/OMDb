@@ -1,14 +1,13 @@
 <script>
 	import { page } from '$app/stores';
 	import MovieCard from '$lib/components/MovieCard.svelte';
-	import { onMount } from 'svelte';
 
 	let results = {};
 	let loading = false;
 
 	// Reactive query and type from URL search params
 	$: query = $page.url.searchParams.get('q') || '';
-	$: type = $page.url.searchParams.get('type') || '';
+	$: type = $page.url.searchParams.get('type') || 'multi'; // default to multi
 
 	async function getResults() {
 		if (!query) {
@@ -17,9 +16,7 @@
 		}
 		loading = true;
 		try {
-			const res = await fetch(
-				`/api/search?q=${encodeURIComponent(query)}${type ? `&type=${type}` : ''}`
-			);
+			const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=${type}`);
 			results = await res.json();
 		} catch (e) {
 			console.error(e);
@@ -29,7 +26,7 @@
 		}
 	}
 
-	// Refetch whenever query or type changes
+	// ✅ Fetch whenever query or type changes
 	$: if (query) {
 		getResults();
 	}
@@ -38,13 +35,13 @@
 <main>
 	{#if loading}
 		<p class="loading">Loading Search Results...</p>
-	{:else if results.Search?.length > 0}
+	{:else if results.results?.length > 0}
 		<div class="results-grid">
-			{#each results.Search as result (result.imdbID)}
+			{#each results.results as result (result.id)}
 				<MovieCard data={result} />
 			{/each}
 		</div>
-	{:else}
+	{:else if query}
 		<p class="no-results">No results found for <span>{query}</span></p>
 	{/if}
 </main>

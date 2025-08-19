@@ -2,19 +2,19 @@
 	import { goto } from '$app/navigation';
 
 	let query = '';
-	let type = 'all';
+	let type = 'multi'; // TMDb default is "multi"
+
 	function onSubmit() {
-		goto(`/search?q=${encodeURIComponent(query)}${type !== 'all' ? `&type=${type}` : ''}`);
+		goto(`/search?q=${encodeURIComponent(query)}&type=${type}`);
 	}
 </script>
 
 <form on:submit|preventDefault={onSubmit}>
-	<input type="text" placeholder="Search A Movie..." bind:value={query} />
+	<input type="text" placeholder="Search movies, shows, people..." bind:value={query} />
 	<select bind:value={type}>
-		<option value="all" selected>All</option>
+		<option value="multi">All</option>
 		<option value="movie">Movie</option>
-		<option value="series">TV Show</option>
-		<option value="episode">Episode</option>
+		<option value="tv">TV Show</option>
 	</select>
 </form>
 

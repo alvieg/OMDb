@@ -2,7 +2,9 @@
 	import NavBar from '$lib/components/NavBar.svelte';
 </script>
 
-<NavBar />
+<div class="nav">
+	<NavBar />
+</div>
 
 <slot />
 
@@ -13,5 +15,11 @@
 		overflow-x: hidden;
 		margin: 0;
 		border: none;
+	}
+
+	.nav {
+		position: sticky;
+		top: 0; /* stick to top */
+		z-index: 1000; /* stay above other content */
 	}
 </style>

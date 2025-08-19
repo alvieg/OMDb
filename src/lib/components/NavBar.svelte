@@ -5,7 +5,7 @@
 <nav>
 	<a href="/" class="logo-link" aria-label="Home">
 		<p class="logo">
-			MT<span class="purple">Db</span>
+			TV<span class="purple">Db</span>
 		</p>
 	</a>
 	<div class="search">

@@ -2,49 +2,59 @@
 	import { onMount } from 'svelte';
 	import MovieCard from '$lib/components/MovieCard.svelte';
 
+	let popular = [];
 	let featured = null;
 	let error = null;
+	let loading = true;
 
-	async function loadHero() {
+	async function loadPopular() {
 		try {
-			const res = await fetch('/api/details?id=tt31036941');
-			if (!res.ok) throw new Error('Failed to fetch featured movie');
-			featured = await res.json();
+			const res = await fetch('/api/popular?type=movie&page=1');
+			if (!res.ok) throw new Error(`Failed to fetch popular movies: ${res.status}`);
+			const data = await res.json();
+			popular = data.results || [];
+
+			// pick the first movie as featured
+			if (popular.length > 0) {
+				featured = popular[0];
+			}
 		} catch (e) {
 			console.error(e);
 			error = e.message;
+		} finally {
+			loading = false;
 		}
 	}
 
-	onMount(loadHero);
+	onMount(loadPopular);
 </script>
 
 <main>
-	{#if error}
-		<p class="error">Sorry, something went wrong: {error}</p>
-	{:else if featured}
-		<section
-			class="hero"
-			style="background-image: url('{featured.Poster !== 'N/A' ? featured.Poster : ''}')"
-			aria-label="Featured Movie"
-		>
-			<div class="overlay">
-				<h1>{featured.Title} <span class="year">({featured.Year})</span></h1>
-				<p class="genre-rating">
-					{featured.Genre} &bull; Rated: {featured.imdbRating !== 'N/A' ? featured.imdbRating : '—'}
-				</p>
-				<p class="plot">{featured.Plot !== 'N/A' ? featured.Plot : 'No plot available.'}</p>
-				<a
-					href={`/movie/${featured.imdbID}`}
-					class="btn"
-					aria-label={`See details for ${featured.Title}`}
-				>
-					See Details
-				</a>
-			</div>
-		</section>
+	{#if loading}
+		<p class="loading">Loading popular movies...</p>
+	{:else if error}
+		<p class="error">{error}</p>
 	{:else}
-		<p>Loading featured movie...</p>
+		{#if featured}
+			<section
+				class="hero"
+				style="background-image: url('https://image.tmdb.org/t/p/w780{featured.backdrop_path}')"
+				aria-label="Featured Movie"
+			>
+				<div class="overlay">
+					<h1>{featured.title} <span class="year">({featured.release_date?.slice(0, 4)})</span></h1>
+					<p class="plot">{featured.overview}</p>
+					<a href={`/movie/${featured.id}`} class="btn">See Details</a>
+				</div>
+			</section>
+		{/if}
+
+		<h2 class="section-title">Popular Movies</h2>
+		<div class="results-grid">
+			{#each popular as movie (movie.id)}
+				<MovieCard data={movie} />
+			{/each}
+		</div>
 	{/if}
 </main>
 
@@ -57,11 +67,12 @@
 		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 	}
 
+	.loading,
 	.error {
-		color: #ff5555;
 		text-align: center;
+		font-size: 1.2rem;
 		margin-top: 2rem;
-		font-weight: bold;
+		color: #ff5555;
 	}
 
 	.hero {
@@ -99,13 +110,6 @@
 		color: #bbb;
 	}
 
-	.genre-rating {
-		font-size: 1rem;
-		margin-bottom: 1rem;
-		color: #ccc;
-		text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.7);
-	}
-
 	.plot {
 		font-size: 1.1rem;
 		line-height: 1.5;
@@ -132,23 +136,28 @@
 		outline: none;
 	}
 
+	.section-title {
+		font-size: 2rem;
+		margin: 2rem 0 1rem;
+		color: #eee;
+	}
+
+	.results-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+		gap: 1rem;
+	}
+
 	@media (max-width: 700px) {
 		.hero {
 			height: 300px;
 		}
-
 		.overlay h1 {
 			font-size: 2rem;
 		}
-
 		.year {
 			font-size: 1.2rem;
 		}
-
-		.genre-rating {
-			font-size: 0.9rem;
-		}
-
 		.plot {
 			font-size: 1rem;
 		}
